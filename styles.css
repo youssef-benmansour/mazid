@@ -2181,4 +2181,12 @@ footer {
     .app-buttons {
         flex-direction: column;
     }
+
+    .about-grid {
+        gap: 0px;
+    }
+
+    .about-img {
+        display: none;
+    }
 }
