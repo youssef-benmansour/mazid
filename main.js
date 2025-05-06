@@ -1,5 +1,11 @@
 // Main functionality for the Mazid landing page
 document.addEventListener('DOMContentLoaded', () => {
+    // Load the EmailJS library
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+    script.async = true;
+    document.head.appendChild(script);
+    
     // Form submission handling
     const contactForm = document.getElementById('contactForm');
     if (contactForm) {
@@ -25,10 +31,81 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            // Simulate form submission (in a real application, this would be an API call)
-            simulateFormSubmission(name, email, userType, message);
+            // Create and show loading indicator
+            const submitBtn = contactForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+            submitBtn.disabled = true;
+            
+            // Check if EmailJS is loaded
+            if (typeof window.emailjs !== 'undefined') {
+                // Initialize EmailJS if not already initialized
+                if (!window.emailjsInitialized) {
+                    window.emailjs.init("ul0MsI9sOEdWuJCKm");
+                    window.emailjsInitialized = true;
+                }
+                
+                // Prepare template parameters
+                const templateParams = {
+                    name: name,
+                    email: email,
+                    user_type: userType || 'Non spécifié',
+                    message: message,
+                    to_email: 'h.lakhlifi@boostlink.ma'
+                };
+                
+                // Send email using EmailJS
+                window.emailjs.send('service_jap7kws', 'template_xeog7i2', templateParams)
+                    .then((response) => {
+                        console.log('SUCCESS!', response.status, response.text);
+                        
+                        // Reset form and button
+                        contactForm.reset();
+                        submitBtn.innerHTML = originalBtnText;
+                        submitBtn.disabled = false;
+                        
+                        // Show success message
+                        showNotification('Votre message a été envoyé avec succès! Nous vous contacterons bientôt.', 'success');
+                    })
+                    .catch((error) => {
+                        console.log('FAILED...', error);
+                        
+                        // Reset button
+                        submitBtn.innerHTML = originalBtnText;
+                        submitBtn.disabled = false;
+                        
+                        // Show error message
+                        showNotification('Une erreur est survenue lors de l\'envoi du message. Veuillez réessayer plus tard.', 'error');
+                    });
+            } else {
+                // EmailJS is not loaded, show error and fallback to form simulation
+                console.error('EmailJS library not loaded. Falling back to simulation.');
+                
+                // Simulate form submission for testing
+                setTimeout(() => {
+                    contactForm.reset();
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                    
+                    showNotification('Votre message a été reçu. Nous vous contacterons bientôt.', 'success');
+                    
+                    // Log form data for debugging
+                    console.log('Form data:', { name, email, userType, message });
+                }, 1500);
+            }
         });
     }
+    
+    // Initialize EmailJS once the script is loaded
+    script.onload = () => {
+        if (typeof window.emailjs !== 'undefined') {
+            window.emailjs.init("ul0MsI9sOEdWuJCKm");
+            window.emailjsInitialized = true;
+            console.log('EmailJS initialized successfully');
+        } else {
+            console.error('EmailJS failed to load');
+        }
+    };
     
     // Newsletter subscription handling
     const newsletterForm = document.querySelector('.newsletter-form');
@@ -54,29 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Simulate newsletter subscription
             simulateNewsletterSubscription(email);
         });
-    }
-    
-    // Function to simulate form submission with loading state
-    function simulateFormSubmission(name, email, userType, message) {
-        // Create and show loading indicator
-        const submitBtn = contactForm.querySelector('button[type="submit"]');
-        const originalBtnText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
-        submitBtn.disabled = true;
-        
-        // Simulate network request
-        setTimeout(() => {
-            // Reset form and button
-            contactForm.reset();
-            submitBtn.innerHTML = originalBtnText;
-            submitBtn.disabled = false;
-            
-            // Show success message
-            showNotification('Votre message a été envoyé avec succès! Nous vous contacterons bientôt.', 'success');
-            
-            // Log form data (for demonstration)
-            console.log('Form submitted:', { name, email, userType, message });
-        }, 1500);
     }
     
     // Function to simulate newsletter subscription
